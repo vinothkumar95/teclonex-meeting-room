@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Bookings\Schemas;
 
 use App\Models\Booking;
 use App\Models\TimeSlot;
+use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -42,6 +43,7 @@ class BookingForm
 
                     DatePicker::make('date')
                     ->required()
+                    ->minDate(Carbon::today())
                     ->rules([
                         fn (Get $get): Closure => function (string $attribute, $value, Closure $fail) use ($get) {
                             Log::info($value,[$get('room_id'),$get('time_slot_id')]);

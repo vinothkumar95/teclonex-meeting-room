@@ -43,7 +43,7 @@ const showingNavigationDropdown = ref(false);
                                     :href="route('room.index')"
                                     :active="route().current('room.index')"
                                 >
-                                    Book Room
+                                    Rooms
                                 </NavLink>
                             </div>
                         </div>

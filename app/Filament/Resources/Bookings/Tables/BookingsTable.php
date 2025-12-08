@@ -43,7 +43,7 @@ class BookingsTable
             ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()->label('Cancel'),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

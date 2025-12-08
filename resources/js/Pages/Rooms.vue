@@ -21,6 +21,18 @@ const showModal = ref(false);
 const selectedSlot = ref(null);
 const isLoading = ref(false);
 
+// Toast
+const toastMessage = ref("");
+const toastType = ref("success");
+const showToast = ref(false);
+
+const triggerToast = (message, type = "success") => {
+    toastMessage.value = message;
+    toastType.value = type;
+    showToast.value = true;
+    setTimeout(() => showToast.value = false, 3000);
+};
+
 // Watch room/date and fetch slots
 watch([selectedRoom, selectedDate], () => loadSlots());
 
@@ -28,12 +40,15 @@ watch([selectedRoom, selectedDate], () => loadSlots());
 const loadSlots = async () => {
     if (!selectedRoom.value || !selectedDate.value) return;
 
-    const response = await axios.post('/room/booked-slots', {
-        room_id: selectedRoom.value,
-        date: selectedDate.value
-    });
-
-    filteredSlots.value = response.data;
+    try {
+        const response = await axios.post('/room/booked-slots', {
+            room_id: selectedRoom.value,
+            date: selectedDate.value
+        });
+        filteredSlots.value = response.data;
+    } catch (error) {
+        triggerToast("Failed to load slots", "error");
+    }
 };
 
 // Open confirmation modal
@@ -49,12 +64,10 @@ onMounted(() => {
 
 const formatTime = (time) => {
     if (!time) return "";
-
     const [hour, minute] = time.split(":");
     const h = parseInt(hour);
     const suffix = h >= 12 ? "PM" : "AM";
     const formattedHour = ((h + 11) % 12 + 1); // convert 0–23 → 1–12
-
     return `${formattedHour}:${minute} ${suffix}`;
 };
 
@@ -69,22 +82,31 @@ const confirmBooking = async () => {
             time_slot_id: selectedSlot.value.id,
         });
 
-        alert("Booking confirmed!");
         showModal.value = false;
+        triggerToast("Booking confirmed!", "success");
 
         loadSlots(); // Refresh slots
-
     } catch (error) {
-        alert(error.response?.data?.message ?? "Booking failed");
+        triggerToast(error.response?.data?.message ?? "Booking failed", "error");
     } finally {
         isLoading.value = false;
     }
 };
 </script>
 
-
 <template>
     <Head title="Book Room" />
+
+    <!-- Toast -->
+    <transition name="fade">
+        <div 
+            v-if="showToast"
+            :class="['fixed top-5 right-5 px-4 py-2 rounded shadow-lg', 
+                     toastType === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white']"
+        >
+            {{ toastMessage }}
+        </div>
+    </transition>
 
     <AuthenticatedLayout>
         <template #header>
@@ -132,7 +154,7 @@ const confirmBooking = async () => {
                             : 'bg-green-100 hover:bg-green-200'"
                     >
                         <div class="font-semibold">
-                                {{ formatTime(slot.start_time) }} - {{ formatTime(slot.end_time) }}
+                            {{ formatTime(slot.start_time) }} - {{ formatTime(slot.end_time) }}
                         </div>
                         <div v-if="slot.is_booked" class="text-sm text-red-600 font-medium mt-1">
                             Booked
@@ -141,7 +163,6 @@ const confirmBooking = async () => {
                             Available
                         </div>
                     </div>
-
                 </div>
 
                 <div v-else class="text-gray-500 mt-4">
@@ -187,6 +208,14 @@ const confirmBooking = async () => {
                 </div>
             </div>
         </div>
-
     </AuthenticatedLayout>
 </template>
+
+<style>
+.fade-enter-active, .fade-leave-active {
+    transition: opacity 0.3s;
+}
+.fade-enter-from, .fade-leave-to {
+    opacity: 0;
+}
+</style>
