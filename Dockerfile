@@ -12,7 +12,7 @@ RUN apt-get update && apt-get install -y \
     libzip-dev \
     nginx \
     supervisor \
-    && docker-php-ext-install pdo pdo_mysql pdo_pgsql mbstring zip exif pcntl gd
+    && docker-php-ext-install pdo pdo_mysql mbstring zip exif pcntl gd
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
